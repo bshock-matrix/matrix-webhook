@@ -1,0 +1,16 @@
+version: "3.8"
+
+services:
+  webhook:
+    build: .
+    restart: unless-stopped
+    environment:
+      - MATRIX_URL=http://host.docker.internal:8008
+      - MATRIX_USER=@webhook_bot:localhost
+      - MATRIX_PASSWORD=SuperSecretPwd123 #example password, will update it in future to use a secure method
+      - MATRIX_ROOM_ID=!abcdefg:localhost
+      - AS_TOKEN=REPLACE_ME_WITH_RANDOM_STRING_AS
+      - BOT_LOCALPART=webhook_bot
+      - SERVER_NAME=localhost
+    ports:
+      - "9000:9000"
