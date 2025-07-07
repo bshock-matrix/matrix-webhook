@@ -10,9 +10,10 @@ This repository contains a Matrix Application Service that provides webhook func
 
 1. [Prerequisites](#prerequisites)
 2. [Initial Setup](#initial-setup)
-3. [Configuration](#configuration)
-4. [Running the Service](#running-the-service)
-5. [Usage Examples](#usage-examples)
+3. [Environment Variables](#environment-variables)
+4. [Configuration](#configuration)
+5. [Running the Service](#running-the-service)
+6. [Usage Examples](#usage-examples)
 
 ---
 
@@ -40,6 +41,22 @@ This repository contains a Matrix Application Service that provides webhook func
      aliases: []
      rooms: []
    ```
+
+---
+
+## Environment Variables
+
+Copy `.env.example` to `.env` and configure the following variables:
+
+```bash
+# Matrix Webhook Environment Variables
+MATRIX_URL=http://host.docker.internal:8008  # URL of your Matrix homeserver
+SERVER_NAME=localhost                        # Your Matrix server name
+BOT_LOCALPART=webhook_bot                   # Bot username localpart
+AS_TOKEN=<generated>                        # Application Service token
+```
+
+These environment variables are used to configure the webhook service. The `.env` file should be kept secure and never committed to version control.
 
 ---
 
