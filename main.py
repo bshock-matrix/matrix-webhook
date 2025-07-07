@@ -38,12 +38,22 @@ def ensure_joined(room: str):
                     "user_id": USER_ID})
 
 
-def send_message(room_id: str, body: str) -> str:
+def send_message(room_id: str, body: str, format: str | None = None) -> str:
+    """Send a message to a room with optional HTML formatting."""
     txn = uuid.uuid4().hex
+    content = {
+        "msgtype": "m.text",
+        "body": body
+    }
+    
+    if format == "html":
+        content["format"] = "org.matrix.custom.html"
+        content["formatted_body"] = body
+
     r = mx_put(f"/_matrix/client/v3/rooms/{room_id}/send/m.room.message/{txn}",
                params={"access_token": AS_TOKEN,
                        "user_id": USER_ID},
-               json={"msgtype": "m.text", "body": body})
+               json=content)
     r.raise_for_status()
     return r.json()["event_id"]
 
@@ -55,6 +65,9 @@ async def incoming(req: Request):
     text = data.get("text")
     if not text:
         raise HTTPException(400, "`text` field is required")
+
+    # Get message format
+    format = data.get("format")
 
     # Determine room
     channel = data.get("channel")          # e.g. "#general"
@@ -74,7 +87,7 @@ async def incoming(req: Request):
     except Exception:
         pass                                            # ignore errors; may be invite-only
     try:
-        event_id = send_message(room_id, text)
+        event_id = send_message(room_id, text, format)
     except requests.HTTPError as e:
         raise HTTPException(500, f"Matrix error: {e.response.text}")
 
