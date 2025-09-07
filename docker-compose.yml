@@ -2,12 +2,11 @@ version: "3.8"
 
 services:
   webhook:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: matrix-webhook:latest
+    container_name: matrix_webhook
     restart: unless-stopped
-    environment:
-      - MATRIX_URL=${MATRIX_URL}
-      - AS_TOKEN=${AS_TOKEN}
-      - BOT_LOCALPART=${BOT_LOCALPART}
-      - SERVER_NAME=${SERVER_NAME}
-    ports:
-      - "${WEBHOOK_PORT:-9000}:9000"
+    env_file:
+      - .env

@@ -2,14 +2,14 @@
 
 # Matrix Webhook アプリケーションサービス
 
-このリポジトリには、Matrix ルームにメッセージを送信するための Webhook 機能を提供する Matrix アプリケーションサービスが含まれています。外部サービスから簡単な HTTP POST リクエストを使用して Matrix ルームにメッセージを送信することができます。
+このリポジトリには、Matrix ルームにメッセージを送信するためのウェブフック機能を提供する Matrix アプリケーションサービスが含まれています。外部サービスが簡単な HTTP POST リクエストを通じて Matrix ルームにメッセージを送信できるようにします。
 
 ---
 
 ## 目次
 
 1. [前提条件](#前提条件)
-2. [初期設定](#初期設定)
+2. [初期セットアップ](#初期セットアップ)
 3. [環境変数](#環境変数)
 4. [設定](#設定)
 5. [サービスの実行](#サービスの実行)
@@ -20,58 +20,31 @@
 ## 前提条件
 
 - Docker & Docker Compose (v3.8+)
-- 稼働中の Matrix ホームサーバー（Synapse）
-- Python 3.8+（Docker を使用しない場合）
+- 実行中の Matrix ホームサーバー (Synapse)
+- Python 3.8+ (Docker なしで実行する場合)
 
 ---
 
-## 初期設定
+## 初期セットアップ
 
-1. このリポジトリをクローンします
-2. アプリケーションサービスの設定ファイル `webhook_as.yaml` は matrix-server ディレクトリにあります。以下のように設定します：
-
-   ```yaml
-   # 設定例
-   hs_token: "random_secret_token" # ホームサーバーがASを認証するためのトークン
-   as_token: "another_random_token" # ASがホームサーバーを認証するためのトークン
-   url: "http://localhost:9000" # このサービスが実行されるURL
-   sender_localpart: "webhook" # ASボットのユーザーIDローカルパート
-   namespaces:
-     users: []
-     aliases: []
-     rooms: []
-   ```
+1. このリポジトリをクローン
+2. アプリケーションサービス設定ファイル `webhook_as.yaml` は matrix-server ディレクトリにあります。詳細については[こちら](https://github.com/bshock-matrix/matrix-server/blob/main/README.ja.md#g-webhook-%E3%82%A2%E3%83%97%E3%83%AA%E3%82%B1%E3%83%BC%E3%82%B7%E3%83%A7%E3%83%B3%E3%82%B5%E3%83%BC%E3%83%93%E3%82%B9)をご覧ください。
 
 ---
 
 ## 環境変数
 
-`.env.example` を `.env` にコピーして、以下の変数を設定します：
+`.env.example` を `.env` にコピーして、以下の変数を設定してください：
 
 ```bash
 # Matrix Webhook 環境変数
-MATRIX_URL=http://host.docker.internal:8008  # Matrix ホームサーバーのURL
-SERVER_NAME=localhost                        # Matrix サーバー名
-BOT_LOCALPART=webhook_bot                   # ボットのユーザー名ローカルパート
-AS_TOKEN=<生成済み>                        # アプリケーションサービストークン
+MATRIX_URL=http://host.docker.internal:8008  # Matrix ホームサーバーの URL、例: https://matrix.org
+SERVER_NAME=localhost                        # Matrix サーバー名、homeserver.yaml 設定の server_name と一致する必要があります
+BOT_LOCALPART=webhook_bot                   # ボットのユーザー名ローカル部分
+AS_TOKEN=<generated>                        # ランダムに生成されたアプリケーションサービストークン
 ```
 
-これらの環境変数は Webhook サービスの設定に使用されます。`.env` ファイルは安全に保管し、バージョン管理には決して含めないでください。
-
----
-
-## 設定
-
-サービスは環境変数または `docker-compose.yml` ファイルで直接設定できます：
-
-```yaml
-environment:
-  - MATRIX_HOMESERVER_URL=http://synapse:8008
-  - MATRIX_USER_ID=@webhook:example.com
-  - AS_TOKEN=another_random_token
-  - HS_TOKEN=random_secret_token
-  - PORT=9000
-```
+これらの環境変数はウェブフックサービスの設定に使用されます。`.env` ファイルは安全に保管し、バージョン管理にコミットしないでください。
 
 ---
 
@@ -79,26 +52,26 @@ environment:
 
 ### Docker Compose を使用（推奨）
 
-デタッチドモードでサービスを起動します：
+デタッチモードでサービスを開始：
 
 ```bash
 docker-compose up -d
 ```
 
-### Docker を使用しない場合
+### Docker なし
 
-1. 依存関係をインストールします：
+1. 依存関係をインストール：
 
    ```bash
    pip install -r requirements.txt
    ```
 
-2. サービスを実行します：
+2. サービスを実行：
    ```bash
    python main.py
    ```
 
-サービスはデフォルトでポート 9000 でリッスンします。
+デフォルトでは、サービスはポート 9000 でリッスンします。
 
 ---
 
@@ -106,15 +79,15 @@ docker-compose up -d
 
 ### メッセージの送信
 
-curl を使用してルームにメッセージを送信します：
+curl を使用してルームにメッセージを送信：
 
 ```bash
-curl -XPOST http://localhost:9000/webhook \
+curl -X POST http://localhost:9000/webhook \
      -H 'Content-Type: application/json' \
      -d '{"text":"Webhook via AS works test!","channel":"#test:localhost"}'
 ```
 
-成功時のレスポンス：
+成功レスポンス：
 
 ```json
 {
@@ -124,24 +97,25 @@ curl -XPOST http://localhost:9000/webhook \
 ```
 
 ### メッセージフォーマットオプション
+> 注意: ウェブフックボットはパブリックルームに自動的に参加できます。プライベートルームの場合は、まずボットユーザーをルームに招待してください。ボットは自動的に招待を受諾します。
 
 異なるフォーマットでメッセージを送信できます：
 
 ```bash
-# HTMLフォーマットのメッセージ
-curl -XPOST http://localhost:9000/webhook \
+# HTML フォーマットメッセージ
+curl -X POST http://localhost:9000/webhook \
      -H 'Content-Type: application/json' \
      -d '{
-           "text": "<b>太字のテキスト</b>と<i>斜体のテキスト</i>",
+           "text": "<b>太字テキスト</b> and <i>斜体テキスト</i>",
            "channel": "#test:localhost",
            "format": "html"
          }'
 
-# メンション付きのプレーンテキスト
-curl -XPOST http://localhost:9000/webhook \
+# メンション付きプレーンテキスト
+curl -X POST http://localhost:9000/webhook \
      -H 'Content-Type: application/json' \
      -d '{
-           "text": "こんにちは @user:example.com、これを確認してください！",
+           "text": "Hey @user:example.com, これをチェックしてください！",
            "channel": "#test:localhost"
          }'
 ```
@@ -153,16 +127,16 @@ curl -XPOST http://localhost:9000/webhook \
 サービスは適切な HTTP ステータスコードと JSON レスポンスを返します：
 
 - 200: メッセージ送信成功
-- 400: リクエストフォーマットが無効
+- 400: 無効なリクエストフォーマット
 - 401: 認証失敗
 - 404: ルームが見つからない
 - 500: 内部サーバーエラー
 
-エラーレスポンスの例：
+エラーレスポンス例：
 
 ```json
 {
   "ok": false,
-  "error": "ルームが見つかりません"
+  "error": "Room not found"
 }
 ```
