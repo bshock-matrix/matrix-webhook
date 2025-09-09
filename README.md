@@ -28,19 +28,7 @@ This repository contains a Matrix Application Service that provides webhook func
 ## Initial Setup
 
 1. Clone this repository
-2. The Application Service configuration file `webhook_as.yaml` is located in the matrix-server directory. Configure it with:
-
-   ```yaml
-   # Example configuration
-   hs_token: "random_secret_token" # Token for homeserver to authenticate AS
-   as_token: "another_random_token" # Token for AS to authenticate to homeserver
-   url: "http://localhost:9000" # URL where this service will run
-   sender_localpart: "webhook" # The user ID localpart for the AS bot
-   namespaces:
-     users: []
-     aliases: []
-     rooms: []
-   ```
+2. The Application Service configuration file `webhook_as.yaml` is located in the matrix-server directory. Find more details [here](https://github.com/bshock-matrix/matrix-server?tab=readme-ov-file#g-webhook-application-service).
 
 ---
 
@@ -50,28 +38,13 @@ Copy `.env.example` to `.env` and configure the following variables:
 
 ```bash
 # Matrix Webhook Environment Variables
-MATRIX_URL=http://host.docker.internal:8008  # URL of your Matrix homeserver
-SERVER_NAME=localhost                        # Your Matrix server name
+MATRIX_URL=http://host.docker.internal:8008  # URL of your Matrix homeserver, eg. https://matrix.org
+SERVER_NAME=localhost                        # Your Matrix server name, it should match the server_name in your homeserver.yaml config
 BOT_LOCALPART=webhook_bot                   # Bot username localpart
-AS_TOKEN=<generated>                        # Application Service token
+AS_TOKEN=<generated>                        # Application Service token randomly generated
 ```
 
 These environment variables are used to configure the webhook service. The `.env` file should be kept secure and never committed to version control.
-
----
-
-## Configuration
-
-The service can be configured through environment variables or directly in the `docker-compose.yml` file:
-
-```yaml
-environment:
-  - MATRIX_HOMESERVER_URL=http://synapse:8008
-  - MATRIX_USER_ID=@webhook:example.com
-  - AS_TOKEN=another_random_token
-  - HS_TOKEN=random_secret_token
-  - PORT=9000
-```
 
 ---
 
@@ -109,7 +82,7 @@ The service will listen on port 9000 by default.
 Send a message to a room using curl:
 
 ```bash
-curl -XPOST http://localhost:9000/webhook \
+curl -X POST http://localhost:9000/webhook \
      -H 'Content-Type: application/json' \
      -d '{"text":"Webhook via AS works test!","channel":"#test:localhost"}'
 ```
@@ -124,12 +97,13 @@ Successful response:
 ```
 
 ### Message Format Options
+> Note: The webhook bot can join public rooms automatically. For private rooms, invite the bot user to the room first, it will automatically accept the invitation.
 
 You can send messages with different formats:
 
 ```bash
 # HTML-formatted message
-curl -XPOST http://localhost:9000/webhook \
+curl -X POST http://localhost:9000/webhook \
      -H 'Content-Type: application/json' \
      -d '{
            "text": "<b>Bold text</b> and <i>italic text</i>",
@@ -138,7 +112,7 @@ curl -XPOST http://localhost:9000/webhook \
          }'
 
 # Plain text with mentions
-curl -XPOST http://localhost:9000/webhook \
+curl -X POST http://localhost:9000/webhook \
      -H 'Content-Type: application/json' \
      -d '{
            "text": "Hey @user:example.com, check this out!",
